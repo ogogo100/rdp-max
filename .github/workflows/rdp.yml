@@ -2,7 +2,6 @@ name: RDP
 
 on:
   workflow_dispatch:
-  push:
 
 jobs:
   build:
@@ -19,46 +18,44 @@ jobs:
         netsh advfirewall firewall add rule name="RDP" dir=in action=allow protocol=TCP localport=3389
         Start-Service TermService
     
-    - name: Скачать bore
+    - name: Скачать ngrok
       run: |
-        Invoke-WebRequest -Uri "https://github.com/ekzhang/bore/releases/download/v0.5.0/bore-v0.5.0-x86_64-pc-windows-msvc.zip" -OutFile "bore.zip"
-        Expand-Archive bore.zip -DestinationPath bore
-        Remove-Item bore.zip
+        Invoke-WebRequest -Uri "https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-windows-amd64.zip" -OutFile "ngrok.zip"
+        Expand-Archive ngrok.zip -DestinationPath ngrok
+        Remove-Item ngrok.zip
     
-    - name: Запустить bore туннель
+    - name: Запустить ngrok
       run: |
-        cd bore
-        .\bore.exe local 3389 --to bore.pub | ForEach-Object {
-          if ($_ -match "tcp://bore.pub:(\d+)") {
-            Write-Host ""
-            Write-Host "=====================================================" -ForegroundColor Green
-            Write-Host "RDP ПОДКЛЮЧЕНИЕ:" -ForegroundColor Cyan
-            Write-Host "Адрес: bore.pub:$($matches[1])" -ForegroundColor Yellow
-            Write-Host "Пользователь: runneradmin" -ForegroundColor Yellow
-            Write-Host "Пароль: RdpPass2026" -ForegroundColor Yellow
-            Write-Host "=====================================================" -ForegroundColor Green
-            Write-Host "Команда: mstsc /v:bore.pub:$($matches[1])" -ForegroundColor White
-            Write-Host "=====================================================" -ForegroundColor Green
-          }
-          Write-Output $_
+        cd ngrok
+        Start-Process .\ngrok.exe -ArgumentList "tcp 3389" -WindowStyle Hidden
+        Start-Sleep -Seconds 15
+        Write-Host "ngrok started"
+    
+    - name: Показать адрес
+      run: |
+        Start-Sleep -Seconds 5
+        $ngrokLog = Get-Content "$env:TEMP\ngrok.log" -ErrorAction SilentlyContinue
+        if ($ngrokLog -match "Forwarding.*tcp://(.*):(\d+)") {
+          $addr = $matches[1]
+          $port = $matches[2]
+          Write-Host ""
+          Write-Host "=====================================================" -ForegroundColor Green
+          Write-Host "  ПОДКЛЮЧЕНИЕ RDP" -ForegroundColor Cyan
+          Write-Host "=====================================================" -ForegroundColor Green
+          Write-Host "  АДРЕС: $addr`:$port" -ForegroundColor Yellow
+          Write-Host "  ПОЛЬЗОВАТЕЛЬ: runneradmin" -ForegroundColor Yellow
+          Write-Host "  ПАРОЛЬ: RdpPass2026" -ForegroundColor Yellow
+          Write-Host "=====================================================" -ForegroundColor Green
+          Write-Host "  mstsc /v:$addr`:$port" -ForegroundColor White
+          Write-Host "=====================================================" -ForegroundColor Green
+        } else {
+          $ip = (Invoke-WebRequest -Uri "https://api.ipify.org" -UseBasicParsing).Content
+          Write-Host "====================================================="
+          Write-Host "ПРЯМОЙ RDP IP: $ip" -ForegroundColor Yellow
+          Write-Host "ПОЛЬЗОВАТЕЛЬ: runneradmin" -ForegroundColor Yellow
+          Write-Host "ПАРОЛЬ: RdpPass2026" -ForegroundColor Yellow
+          Write-Host "====================================================="
         }
-        Start-Sleep -Seconds 10
-    
-    - name: Информация
-      run: |
-        $ip = (Invoke-WebRequest -Uri "https://api.ipify.org" -UseBasicParsing).Content
-        Write-Host ""
-        Write-Host "=====================================================" -ForegroundColor Cyan
-        Write-Host "        RDP АКТИВЕН - 6 ЧАСОВ" -ForegroundColor Green
-        Write-Host "=====================================================" -ForegroundColor Cyan
-        Write-Host "Прямой RDP (может не работать):" -ForegroundColor Yellow
-        Write-Host "  IP: $ip" -ForegroundColor White
-        Write-Host "  User: runneradmin" -ForegroundColor White
-        Write-Host "  Pass: RdpPass2026" -ForegroundColor White
-        Write-Host ""
-        Write-Host "BORE ТУННЕЛЬ (РАБОТАЕТ ВСЕГДА):" -ForegroundColor Green
-        Write-Host "  Адрес: bore.pub:ПОРТ (смотрите выше в логе)" -ForegroundColor White
-        Write-Host "=====================================================" -ForegroundColor Cyan
     
     - name: Держать активным
       run: Start-Sleep -Seconds 21600
