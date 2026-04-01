@@ -24,31 +24,28 @@ jobs:
         Expand-Archive ngrok.zip -DestinationPath ngrok
         Remove-Item ngrok.zip
     
-    - name: Запустить ngrok
+    - name: Запустить ngrok с выводом
       run: |
         cd ngrok
-        Start-Process .\ngrok.exe -ArgumentList "tcp 3389" -WindowStyle Hidden
-        Start-Sleep -Seconds 15
-        Write-Host "ngrok started"
+        .\ngrok.exe tcp 3389 --log=stdout &
+        Start-Sleep -Seconds 10
     
     - name: Показать адрес
       run: |
-        Start-Sleep -Seconds 5
         $ip = (Invoke-WebRequest -Uri "https://api.ipify.org" -UseBasicParsing).Content
         Write-Host ""
         Write-Host "=====================================================" -ForegroundColor Green
-        Write-Host "  ПОДКЛЮЧЕНИЕ RDP" -ForegroundColor Cyan
+        Write-Host "  RDP CONNECTION INFO" -ForegroundColor Cyan
         Write-Host "=====================================================" -ForegroundColor Green
-        Write-Host "  АДРЕС: $ip:3389 (может не работать)" -ForegroundColor Yellow
-        Write-Host "  ПОЛЬЗОВАТЕЛЬ: runneradmin" -ForegroundColor Yellow
-        Write-Host "  ПАРОЛЬ: RdpPass2026" -ForegroundColor Yellow
+        Write-Host "  DIRECT RDP IP: $ip:3389 (probably blocked)" -ForegroundColor Yellow
+        Write-Host "  USER: runneradmin" -ForegroundColor Yellow
+        Write-Host "  PASSWORD: RdpPass2026" -ForegroundColor Yellow
         Write-Host "=====================================================" -ForegroundColor Green
         Write-Host ""
-        Write-Host "Если прямой RDP не работает, используйте ngrok:" -ForegroundColor Cyan
-        Write-Host "1. Откройте лог выше" -ForegroundColor White
-        Write-Host "2. Найдите строку 'Forwarding'" -ForegroundColor White
-        Write-Host "3. Подключитесь к адресу из этой строки" -ForegroundColor White
+        Write-Host "  LOOK ABOVE in the log for ngrok address:" -ForegroundColor Cyan
+        Write-Host "  Find line: Forwarding: tcp://0.tcp.ngrok.io:PORT" -ForegroundColor White
+        Write-Host "  Connect: mstsc /v:0.tcp.ngrok.io:PORT" -ForegroundColor White
         Write-Host "=====================================================" -ForegroundColor Green
     
-    - name: Держать активным
+    - name: Keep alive
       run: Start-Sleep -Seconds 21600
