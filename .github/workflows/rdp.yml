@@ -9,41 +9,44 @@ jobs:
     timeout-minutes: 360
     
     steps:
-    - name: Установка пароля
+    - name: Set password
       run: net user runneradmin RdpPass2026
     
-    - name: Включение RDP
+    - name: Enable RDP
       run: |
         Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" -Value 0
         netsh advfirewall firewall add rule name="RDP" dir=in action=allow protocol=TCP localport=3389
         Start-Service TermService
     
-    - name: Скачать ngrok
+    - name: Download ngrok
       run: |
         Invoke-WebRequest -Uri "https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-windows-amd64.zip" -OutFile "ngrok.zip"
         Expand-Archive ngrok.zip -DestinationPath ngrok
         Remove-Item ngrok.zip
     
-    - name: Запустить ngrok с выводом
+    - name: Run ngrok (will show address)
       run: |
         cd ngrok
-        .\ngrok.exe tcp 3389 --log=stdout &
-        Start-Sleep -Seconds 10
+        # Запускаем и выводим в лог
+        .\ngrok.exe tcp 3389 --log=stdout 2>&1 | Select-String "Forwarding"
+        # Ждем 5 секунд для стабильности
+        Start-Sleep -Seconds 5
+      continue-on-error: true
     
-    - name: Показать адрес
+    - name: Show connection info
       run: |
         $ip = (Invoke-WebRequest -Uri "https://api.ipify.org" -UseBasicParsing).Content
         Write-Host ""
         Write-Host "=====================================================" -ForegroundColor Green
         Write-Host "  RDP CONNECTION INFO" -ForegroundColor Cyan
         Write-Host "=====================================================" -ForegroundColor Green
-        Write-Host "  DIRECT RDP IP: $ip:3389 (probably blocked)" -ForegroundColor Yellow
+        Write-Host "  DIRECT IP: $ip:3389 (likely blocked)" -ForegroundColor Yellow
         Write-Host "  USER: runneradmin" -ForegroundColor Yellow
-        Write-Host "  PASSWORD: RdpPass2026" -ForegroundColor Yellow
+        Write-Host "  PASS: RdpPass2026" -ForegroundColor Yellow
         Write-Host "=====================================================" -ForegroundColor Green
         Write-Host ""
-        Write-Host "  LOOK ABOVE in the log for ngrok address:" -ForegroundColor Cyan
-        Write-Host "  Find line: Forwarding: tcp://0.tcp.ngrok.io:PORT" -ForegroundColor White
+        Write-Host "  NGROK ADDRESS (if above):" -ForegroundColor Cyan
+        Write-Host "  Look for 'Forwarding' line in previous step" -ForegroundColor White
         Write-Host "  Connect: mstsc /v:0.tcp.ngrok.io:PORT" -ForegroundColor White
         Write-Host "=====================================================" -ForegroundColor Green
     
