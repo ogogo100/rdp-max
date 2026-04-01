@@ -9,20 +9,20 @@ jobs:
     timeout-minutes: 360
     
     steps:
-    - name: Set password
+    - name: Установка пароля
       run: net user runneradmin RdpPass2026
     
-    - name: Enable RDP
+    - name: Включение RDP
       run: |
         Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" -Value 0
         netsh advfirewall firewall add rule name="RDP" dir=in action=allow protocol=TCP localport=3389
         Start-Service TermService
     
-    - name: Download bore
+    - name: Скачать bore
       run: |
         curl -L -o bore.zip https://github.com/ekzhang/bore/releases/download/v0.5.0/bore-v0.5.0-x86_64-pc-windows-msvc.zip
         tar -xf bore.zip
         del bore.zip
     
-    - name: Start bore
+    - name: Запуск bore
       run: .\bore.exe local 3389 --to bore.pub
