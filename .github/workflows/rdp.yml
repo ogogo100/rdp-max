@@ -24,28 +24,6 @@ jobs:
         tar -xf bore.zip
         del bore.zip
     
-    - name: Start bore in background
+    - name: Start bore
       run: |
-        Start-Process -NoNewWindow -FilePath ".\bore.exe" -ArgumentList "local 3389 --to bore.pub" -RedirectStandardOutput "bore.log"
-        Start-Sleep -Seconds 5
-        Get-Content bore.log
-    
-    - name: Show connection info
-      run: |
-        $log = Get-Content bore.log
-        if ($log -match "listening at bore.pub:(\d+)") {
-          $port = $matches[1]
-          Write-Host ""
-          Write-Host "=====================================================" -ForegroundColor Green
-          Write-Host "  RDP READY" -ForegroundColor Cyan
-          Write-Host "=====================================================" -ForegroundColor Green
-          Write-Host "  ADDRESS: bore.pub:$port" -ForegroundColor Yellow
-          Write-Host "  USER: runneradmin" -ForegroundColor Yellow
-          Write-Host "  PASS: RdpPass2026" -ForegroundColor Yellow
-          Write-Host "=====================================================" -ForegroundColor Green
-          Write-Host "  mstsc /v:bore.pub:$port" -ForegroundColor White
-          Write-Host "=====================================================" -ForegroundColor Green
-        }
-    
-    - name: Keep alive
-      run: Start-Sleep -Seconds 21600
+        .\bore.exe local 3389 --to bore.pub
