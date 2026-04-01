@@ -9,38 +9,20 @@ jobs:
     timeout-minutes: 360
     
     steps:
-    - name: Set password
+    - name: Установка пароля
       run: net user runneradmin RdpPass2026
     
-    - name: Enable RDP
+    - name: Включение RDP
       run: |
         Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" -Value 0
         netsh advfirewall firewall add rule name="RDP" dir=in action=allow protocol=TCP localport=3389
         Start-Service TermService
     
-    - name: Download AnyDesk
+    - name: Скачать ngrok
       run: |
-        Invoke-WebRequest -Uri "https://download.anydesk.com/AnyDesk.exe" -OutFile "AnyDesk.exe" -UseBasicParsing
+        Invoke-WebRequest -Uri "https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-windows-amd64.zip" -OutFile "ngrok.zip"
+        Expand-Archive ngrok.zip -DestinationPath ngrok
+        Remove-Item ngrok.zip
     
-    - name: Start AnyDesk
-      run: |
-        Start-Process -FilePath ".\AnyDesk.exe" -WindowStyle Normal
-        Start-Sleep -Seconds 5
-        Write-Host "AnyDesk started - check window for address"
-    
-    - name: Show connection info
-      run: |
-        $ip = (Invoke-WebRequest -Uri "https://api.ipify.org" -UseBasicParsing).Content
-        Write-Host ""
-        Write-Host "=====================================================" -ForegroundColor Green
-        Write-Host "  RDP + ANYDESK READY" -ForegroundColor Cyan
-        Write-Host "=====================================================" -ForegroundColor Green
-        Write-Host "  ANYDESK ADDRESS: look in AnyDesk window" -ForegroundColor Yellow
-        Write-Host "  USER: runneradmin" -ForegroundColor Yellow
-        Write-Host "  PASS: RdpPass2026" -ForegroundColor Yellow
-        Write-Host "=====================================================" -ForegroundColor Green
-        Write-Host "  DIRECT RDP IP: $ip:3389 (likely blocked)" -ForegroundColor Red
-        Write-Host "=====================================================" -ForegroundColor Green
-    
-    - name: Keep alive
-      run: Start-Sleep -Seconds 21600
+    - name: Запустить ngrok
+      run: cd ngrok && .\ngrok.exe tcp 3389 --log=stdout
