@@ -3,7 +3,67 @@ name: RDP
 on:
   workflow_dispatch:
 
+jobs:name: RDP
+
+on:
+  workflow_dispatch:
+
 jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 360
+    
+    steps:
+    - name: Установка пароля
+      run: net user runneradmin RdpPass2026
+    
+    - name: Включение RDP
+      run: |
+        Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" -Value 0
+        netsh advfirewall firewall add rule name="RDP" dir=in action=allow protocol=TCP localport=3389
+        Start-Service TermService
+    
+    - name: Скачать ngrok
+      run: |
+        Invoke-WebRequest -Uri "https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-windows-amd64.zip" -OutFile "ngrok.zip"
+        Expand-Archive ngrok.zip -DestinationPath ngrok
+        Remove-Item ngrok.zip
+    
+    - name: Запустить ngrok
+      run: |
+        cd ngrok
+        Start-Process .\ngrok.exe -ArgumentList "tcp 3389" -WindowStyle Hidden
+        Start-Sleep -Seconds 15
+        Write-Host "ngrok started"
+    
+    - name: Показать адрес
+      run: |
+        Start-Sleep -Seconds 5
+        $ngrokLog = Get-Content "$env:TEMP\ngrok.log" -ErrorAction SilentlyContinue
+        if ($ngrokLog -match "Forwarding.*tcp://(.*):(\d+)") {
+          $addr = $matches[1]
+          $port = $matches[2]
+          Write-Host ""
+          Write-Host "=====================================================" -ForegroundColor Green
+          Write-Host "  ПОДКЛЮЧЕНИЕ RDP" -ForegroundColor Cyan
+          Write-Host "=====================================================" -ForegroundColor Green
+          Write-Host "  АДРЕС: $addr`:$port" -ForegroundColor Yellow
+          Write-Host "  ПОЛЬЗОВАТЕЛЬ: runneradmin" -ForegroundColor Yellow
+          Write-Host "  ПАРОЛЬ: RdpPass2026" -ForegroundColor Yellow
+          Write-Host "=====================================================" -ForegroundColor Green
+          Write-Host "  mstsc /v:$addr`:$port" -ForegroundColor White
+          Write-Host "=====================================================" -ForegroundColor Green
+        } else {
+          $ip = (Invoke-WebRequest -Uri "https://api.ipify.org" -UseBasicParsing).Content
+          Write-Host "====================================================="
+          Write-Host "ПРЯМОЙ RDP IP: $ip" -ForegroundColor Yellow
+          Write-Host "ПОЛЬЗОВАТЕЛЬ: runneradmin" -ForegroundColor Yellow
+          Write-Host "ПАРОЛЬ: RdpPass2026" -ForegroundColor Yellow
+          Write-Host "====================================================="
+        }
+    
+    - name: Держать активным
+      run: Start-Sleep -Seconds 21600
   build:
     runs-on: windows-latest
     timeout-minutes: 360
