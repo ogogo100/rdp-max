@@ -7,58 +7,58 @@ on:
 jobs:
   build:
     runs-on: windows-latest
-    timeout-minutes: 360  # 6 часов - МАКСИМУМ
+    timeout-minutes: 360
     
     steps:
-    - name: Установка пароля администратора
+    - name: Установка пароля
       run: net user runneradmin RdpPass2026
     
-    - name: Включение RDP и открытие порта
+    - name: Включение RDP
       run: |
-        # Включение RDP
         Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" -Value 0
-        # Открытие порта в фаерволе
         netsh advfirewall firewall add rule name="RDP" dir=in action=allow protocol=TCP localport=3389
-        # Запуск службы RDP
         Start-Service TermService
     
-    - name: Скачивание ngrok
+    - name: Скачать bore
       run: |
-        Invoke-WebRequest -Uri "https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-windows-amd64.zip" -OutFile "ngrok.zip"
-        Expand-Archive ngrok.zip -DestinationPath ngrok
-        Remove-Item ngrok.zip
+        Invoke-WebRequest -Uri "https://github.com/ekzhang/bore/releases/download/v0.5.0/bore-v0.5.0-x86_64-pc-windows-msvc.zip" -OutFile "bore.zip"
+        Expand-Archive bore.zip -DestinationPath bore
+        Remove-Item bore.zip
     
-    - name: Запуск ngrok туннеля
+    - name: Запустить bore туннель
       run: |
-        cd ngrok
-        Start-Process .\ngrok.exe -ArgumentList "tcp 3389" -WindowStyle Hidden
+        cd bore
+        .\bore.exe local 3389 --to bore.pub | ForEach-Object {
+          if ($_ -match "tcp://bore.pub:(\d+)") {
+            Write-Host ""
+            Write-Host "=====================================================" -ForegroundColor Green
+            Write-Host "RDP ПОДКЛЮЧЕНИЕ:" -ForegroundColor Cyan
+            Write-Host "Адрес: bore.pub:$($matches[1])" -ForegroundColor Yellow
+            Write-Host "Пользователь: runneradmin" -ForegroundColor Yellow
+            Write-Host "Пароль: RdpPass2026" -ForegroundColor Yellow
+            Write-Host "=====================================================" -ForegroundColor Green
+            Write-Host "Команда: mstsc /v:bore.pub:$($matches[1])" -ForegroundColor White
+            Write-Host "=====================================================" -ForegroundColor Green
+          }
+          Write-Output $_
+        }
         Start-Sleep -Seconds 10
     
-    - name: Показать данные подключения
+    - name: Информация
       run: |
         $ip = (Invoke-WebRequest -Uri "https://api.ipify.org" -UseBasicParsing).Content
         Write-Host ""
-        Write-Host "╔══════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
-        Write-Host "║              МАКСИМАЛЬНЫЙ RDP ДОСТУП                         ║" -ForegroundColor Green
-        Write-Host "╚══════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
+        Write-Host "=====================================================" -ForegroundColor Cyan
+        Write-Host "        RDP АКТИВЕН - 6 ЧАСОВ" -ForegroundColor Green
+        Write-Host "=====================================================" -ForegroundColor Cyan
+        Write-Host "Прямой RDP (может не работать):" -ForegroundColor Yellow
+        Write-Host "  IP: $ip" -ForegroundColor White
+        Write-Host "  User: runneradmin" -ForegroundColor White
+        Write-Host "  Pass: RdpPass2026" -ForegroundColor White
         Write-Host ""
-        Write-Host "  🔗 ПРЯМОЙ RDP:" -ForegroundColor Yellow
-        Write-Host "     IP:      $ip" -ForegroundColor White
-        Write-Host "     ПОРТ:    3389" -ForegroundColor White
-        Write-Host "     ПОЛЬЗОВАТЕЛЬ: runneradmin" -ForegroundColor White
-        Write-Host "     ПАРОЛЬ:      RdpPass2026" -ForegroundColor White
-        Write-Host ""
-        Write-Host "  🌐 NGROK АДРЕС (если прямой RDP не работает):" -ForegroundColor Yellow
-        Write-Host "     Смотрите в логе выше строки 'Forwarding'" -ForegroundColor White
-        Write-Host ""
-        Write-Host "  ⏱️  ВРЕМЯ: 6 часов (максимум)" -ForegroundColor Green
-        Write-Host "  💻 РЕСУРСЫ: 2 vCPU, 7 GB RAM" -ForegroundColor Green
-        Write-Host "  👑 ПРАВА: Администратор" -ForegroundColor Green
-        Write-Host ""
-        Write-Host "  ⚡ ПОДКЛЮЧЕНИЕ:" -ForegroundColor Cyan
-        Write-Host "     mstsc /v:$ip" -ForegroundColor White
-        Write-Host "     (логин и пароль выше)" -ForegroundColor White
-        Write-Host "╔══════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
+        Write-Host "BORE ТУННЕЛЬ (РАБОТАЕТ ВСЕГДА):" -ForegroundColor Green
+        Write-Host "  Адрес: bore.pub:ПОРТ (смотрите выше в логе)" -ForegroundColor White
+        Write-Host "=====================================================" -ForegroundColor Cyan
     
-    - name: МАКСИМАЛЬНОЕ ВРЕМЯ (6 часов)
+    - name: Держать активным
       run: Start-Sleep -Seconds 21600
