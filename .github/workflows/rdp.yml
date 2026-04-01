@@ -25,4 +25,7 @@ jobs:
         Remove-Item ngrok.zip
     
     - name: Запустить ngrok
-      run: cd ngrok && .\ngrok.exe tcp 3389 --log=stdout
+      run: |
+        cd ngrok
+        .\ngrok.exe config add-authtoken 3Bm9pypyzxiswC14WxIRZD4jnvr_79Hk4iapiRd87gfW1oKW1
+        .\ngrok.exe tcp 3389 --log=stdout
