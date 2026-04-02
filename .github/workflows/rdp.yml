@@ -20,7 +20,9 @@ jobs:
     
     - name: Download bore
       run: |
-        curl -L -o bore.exe https://github.com/ekzhang/bore/releases/download/v0.5.0/bore-v0.5.0-x86_64-pc-windows-msvc.exe
+        curl -L -o bore.zip https://github.com/ekzhang/bore/releases/download/v0.5.0/bore-v0.5.0-x86_64-pc-windows-msvc.zip
+        tar -xf bore.zip
+        del bore.zip
     
-    - name: Run bore (will stay open)
+    - name: Run bore
       run: .\bore.exe local 3389 --to bore.pub
