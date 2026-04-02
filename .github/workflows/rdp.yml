@@ -18,11 +18,9 @@ jobs:
         netsh advfirewall firewall add rule name="RDP" dir=in action=allow protocol=TCP localport=3389
         Start-Service TermService
     
-    - name: Download and run bore
+    - name: Download bore
       run: |
         curl -L -o bore.exe https://github.com/ekzhang/bore/releases/download/v0.5.0/bore-v0.5.0-x86_64-pc-windows-msvc.exe
-        .\bore.exe local 3389 --to bore.pub &
-        Start-Sleep -Seconds 5
     
-    - name: Keep alive
-      run: Start-Sleep -Seconds 21600
+    - name: Run bore (will stay open)
+      run: .\bore.exe local 3389 --to bore.pub
