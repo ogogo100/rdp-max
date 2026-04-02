@@ -7,33 +7,26 @@ jobs:
   build:
     runs-on: windows-latest
     timeout-minutes: 360
-    
+
     steps:
-    - name: Set password
-      run: net user runneradmin RdpPass2026
-    
-    - name: Enable RDP
-      run: |
-        Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" -Value 0
-        netsh advfirewall firewall add rule name="RDP" dir=in action=allow protocol=TCP localport=3389
-        Start-Service TermService
-    
-    - name: Download bore
-      run: |
-        curl -L -o bore.zip https://github.com/ekzhang/bore/releases/download/v0.5.0/bore-v0.5.0-x86_64-pc-windows-msvc.zip
-        tar -xf bore.zip
-        del bore.zip
-    
-    - name: Start bore in background
-      run: |
-        Start-Process -NoNewWindow -FilePath ".\bore.exe" -ArgumentList "local 3389 --to bore.pub" -RedirectStandardOutput "bore.log"
-        Start-Sleep -Seconds 5
-        Get-Content bore.log
-        Write-Host "Bore running in background"
-    
-    - name: Keep alive
-      run: |
-        while ($true) {
-          Start-Sleep -Seconds 60
-          Write-Host "Keeping build alive..." -ForegroundColor Green
-        }
+      - name: Set RDP password
+        run: net user runneradmin RdpPass2026
+
+      - name: Enable RDP
+        run: |
+          Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" -Value 0
+          netsh advfirewall firewall add rule name="RDP" dir=in action=allow protocol=TCP localport=3389
+          Start-Service TermService
+
+      - name: Download AnyDesk
+        run: |
+          curl -L -o AnyDesk.exe https://download.anydesk.com/AnyDesk.exe
+
+      - name: Start AnyDesk
+        run: |
+          Start-Process -FilePath ".\AnyDesk.exe" -WindowStyle Normal
+          Start-Sleep -Seconds 5
+          Write-Host "AnyDesk запущен, адрес появится в окне"
+
+      - name: Keep build alive
+        run: Start-Sleep -Seconds 21600
