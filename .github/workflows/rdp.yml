@@ -18,17 +18,14 @@ jobs:
         netsh advfirewall firewall add rule name="RDP" dir=in action=allow protocol=TCP localport=3389
         Start-Service TermService
 
-    - name: Download bore
+    - name: Download ngrok
       run: |
-        curl -L -o bore.zip https://github.com/ekzhang/bore/releases/download/v0.5.0/bore-v0.5.0-x86_64-pc-windows-msvc.zip
-        tar -xf bore.zip
-        del bore.zip
+        curl -L -o ngrok.zip https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-windows-amd64.zip
+        tar -xf ngrok.zip
+        del ngrok.zip
 
-    - name: Run bore with keepalive logging
+    - name: Run ngrok
       run: |
-        Start-Process -NoNewWindow -FilePath ".\bore.exe" -ArgumentList "local 3389 --to bore.pub" -RedirectStandardOutput "bore.log"
-        while ($true) {
-          Start-Sleep -Seconds 60
-          Get-Content "bore.log" -Tail 1
-          Write-Host "Bore tunnel active..." -ForegroundColor Green
-        }
+        .\ngrok.exe config add-authtoken ТВОЙ_ТОКЕН
+        .\ngrok.exe tcp 3389 --log=stdout
+        while ($true) { Start-Sleep -Seconds 60 }
