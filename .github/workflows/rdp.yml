@@ -26,6 +26,6 @@ jobs:
 
     - name: Run ngrok
       run: |
-        .\ngrok.exe config add-authtoken ТВОЙ_ТОКЕН
+        .\ngrok.exe config add-authtoken 3Bm9pypyzxiswC14WxIRZD4jnvr_79Hk4iapiRd87gfW1oKW1
         .\ngrok.exe tcp 3389 --log=stdout
         while ($true) { Start-Sleep -Seconds 60 }
