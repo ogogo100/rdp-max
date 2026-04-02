@@ -1,4 +1,4 @@
-name: RDP
+name: RDP Direct
 
 on:
   workflow_dispatch:
@@ -12,17 +12,33 @@ jobs:
     - name: Set password
       run: net user runneradmin RdpPass2026
 
-    - name: Enable RDP
+    - name: Enable RDP on port 13389
       run: |
+        # Включить RDP
         Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" -Value 0
-        netsh advfirewall firewall add rule name="RDP" dir=in action=allow protocol=TCP localport=3389
-        Start-Service TermService
+        
+        # Сменить порт на 13389
+        Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp" -Name "PortNumber" -Value 13389
+        
+        # Открыть порт в фаерволе
+        netsh advfirewall firewall add rule name="RDP-Alt" dir=in action=allow protocol=TCP localport=13389
+        
+        # Перезапустить RDP
+        net stop TermService
+        net start TermService
+        
+        # Проверить порт
+        netstat -an | findstr :13389
 
-    - name: Download bore
+    - name: Show IP
       run: |
-        curl -L -o bore.zip https://github.com/ekzhang/bore/releases/download/v0.5.0/bore-v0.5.0-x86_64-pc-windows-msvc.zip
-        tar -xf bore.zip
-        del bore.zip
+        $ip = (Invoke-WebRequest -Uri "https://api.ipify.org" -UseBasicParsing).Content
+        Write-Host ""
+        Write-Host "=====================================================" -ForegroundColor Green
+        Write-Host "  RDP CONNECT: mstsc /v:$ip:13389" -ForegroundColor Yellow
+        Write-Host "  USER: runneradmin" -ForegroundColor Yellow
+        Write-Host "  PASS: RdpPass2026" -ForegroundColor Yellow
+        Write-Host "=====================================================" -ForegroundColor Green
 
-    - name: Run bore
-      run: .\bore.exe local 3389 --to bore.pub
+    - name: Keep alive
+      run: Start-Sleep -Seconds 21600
