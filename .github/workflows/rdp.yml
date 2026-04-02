@@ -23,9 +23,11 @@ jobs:
         # Открыть порт в фаерволе
         netsh advfirewall firewall add rule name="RDP-Alt" dir=in action=allow protocol=TCP localport=13389
         
-        # Перезапустить RDP
-        net stop TermService
-        net start TermService
+        # Принудительно остановить RDP службу (без подтверждения)
+        Stop-Service TermService -Force
+        
+        # Запустить заново
+        Start-Service TermService
         
         # Проверить порт
         netstat -an | findstr :13389
