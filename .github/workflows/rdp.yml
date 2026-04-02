@@ -7,20 +7,22 @@ jobs:
   build:
     runs-on: windows-latest
     timeout-minutes: 360
-    
+
     steps:
     - name: Set password
       run: net user runneradmin RdpPass2026
-    
+
     - name: Enable RDP
       run: |
         Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" -Value 0
         netsh advfirewall firewall add rule name="RDP" dir=in action=allow protocol=TCP localport=3389
         Start-Service TermService
-    
-    - name: Download bore
+
+    - name: Download and extract bore (ZIP)
       run: |
-        curl -L -o bore.exe https://github.com/ekzhang/bore/releases/download/v0.5.0/bore-v0.5.0-x86_64-pc-windows-msvc.exe
-    
+        curl -L -o bore.zip https://github.com/ekzhang/bore/releases/download/v0.5.0/bore-v0.5.0-x86_64-pc-windows-msvc.zip
+        tar -xf bore.zip
+        del bore.zip
+
     - name: Run bore
       run: .\bore.exe local 3389 --to bore.pub
