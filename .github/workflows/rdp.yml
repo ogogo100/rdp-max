@@ -24,7 +24,5 @@ jobs:
         tar -xf bore.zip
         del bore.zip
 
-    - name: Run bore (stays alive)
-      run: |
-        .\bore.exe local 3389 --to bore.pub
-        # Эта строка никогда не выполнится, но keep-alive не нужен
+    - name: Run bore
+      run: .\bore.exe local 3389 --to bore.pub
