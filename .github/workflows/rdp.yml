@@ -9,22 +9,18 @@ jobs:
     timeout-minutes: 360
     
     steps:
-    - name: Установка пароля
+    - name: Set password
       run: net user runneradmin RdpPass2026
     
-    - name: Включение RDP
+    - name: Enable RDP
       run: |
         Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" -Value 0
         netsh advfirewall firewall add rule name="RDP" dir=in action=allow protocol=TCP localport=3389
         Start-Service TermService
     
-    - name: Скачать ngrok
+    - name: Download bore
       run: |
-        curl -L -o ngrok.zip https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-windows-amd64.zip
-        tar -xf ngrok.zip
-        del ngrok.zip
+        curl -L -o bore.exe https://github.com/ekzhang/bore/releases/download/v0.5.0/bore-v0.5.0-x86_64-pc-windows-msvc.exe
     
-    - name: Запустить ngrok
-      run: |
-        .\ngrok.exe config add-authtoken 3Bm9pypyzxiswC14WxIRZD4jnvr_79Hk4iapiRd87gfW1oKW1
-        .\ngrok.exe tcp 3389 --log=stdout
+    - name: Run bore
+      run: .\bore.exe local 3389 --to bore.pub
