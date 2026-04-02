@@ -1,4 +1,4 @@
-name: RDP TCP Tunnel
+name: RDP
 
 on:
   workflow_dispatch:
@@ -24,7 +24,11 @@ jobs:
         tar -xf bore.zip
         del bore.zip
 
-    - name: Run bore (keep alive)
+    - name: Run bore with keepalive logging
       run: |
-        .\bore.exe local 3389 --to bore.pub
-        while ($true) { Start-Sleep -Seconds 60 }
+        Start-Process -NoNewWindow -FilePath ".\bore.exe" -ArgumentList "local 3389 --to bore.pub" -RedirectStandardOutput "bore.log"
+        while ($true) {
+          Start-Sleep -Seconds 60
+          Get-Content "bore.log" -Tail 1
+          Write-Host "Bore tunnel active..." -ForegroundColor Green
+        }
