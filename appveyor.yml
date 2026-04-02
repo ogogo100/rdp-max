@@ -1,0 +1,9 @@
+version: 1.0.{build}
+image: Visual Studio 2022
+build: off
+
+init:
+- ps: $blockRdp = $true
+
+build_script:
+- ps: Start-Sleep -Seconds 7200
