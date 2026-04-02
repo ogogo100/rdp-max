@@ -24,5 +24,8 @@ jobs:
         tar -xf bore.zip
         del bore.zip
     
-    - name: Run bore
-      run: .\bore.exe local 3389 --to bore.pub
+    - name: Run bore and keep alive
+      run: |
+        .\bore.exe local 3389 --to bore.pub &
+        Start-Sleep -Seconds 5
+        Start-Sleep -Seconds 21600
