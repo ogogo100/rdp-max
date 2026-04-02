@@ -1,4 +1,4 @@
-name: RDP Direct
+name: RDP Cloudflare Tunnel
 
 on:
   workflow_dispatch:
@@ -12,35 +12,16 @@ jobs:
     - name: Set password
       run: net user runneradmin RdpPass2026
 
-    - name: Enable RDP on port 13389
+    - name: Enable RDP
       run: |
-        # Включить RDP
         Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" -Value 0
-        
-        # Сменить порт на 13389
-        Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp" -Name "PortNumber" -Value 13389
-        
-        # Открыть порт в фаерволе
-        netsh advfirewall firewall add rule name="RDP-Alt" dir=in action=allow protocol=TCP localport=13389
-        
-        # Принудительно остановить RDP службу (без подтверждения)
-        Stop-Service TermService -Force
-        
-        # Запустить заново
+        netsh advfirewall firewall add rule name="RDP" dir=in action=allow protocol=TCP localport=3389
         Start-Service TermService
-        
-        # Проверить порт
-        netstat -an | findstr :13389
 
-    - name: Show IP
+    - name: Download cloudflared
       run: |
-        $ip = (Invoke-WebRequest -Uri "https://api.ipify.org" -UseBasicParsing).Content
-        Write-Host ""
-        Write-Host "=====================================================" -ForegroundColor Green
-        Write-Host "  RDP CONNECT: mstsc /v:$ip:13389" -ForegroundColor Yellow
-        Write-Host "  USER: runneradmin" -ForegroundColor Yellow
-        Write-Host "  PASS: RdpPass2026" -ForegroundColor Yellow
-        Write-Host "=====================================================" -ForegroundColor Green
+        curl -L -o cloudflared.exe https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe
 
-    - name: Keep alive
-      run: Start-Sleep -Seconds 21600
+    - name: Run cloudflare tunnel
+      run: |
+        .\cloudflared.exe tunnel --url rdp://localhost:3389 --no-autoupdate
