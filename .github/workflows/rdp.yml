@@ -24,5 +24,16 @@ jobs:
         tar -xf bore.zip
         del bore.zip
     
-    - name: Run bore
-      run: .\bore.exe local 3389 --to bore.pub
+    - name: Start bore in background
+      run: |
+        Start-Process -NoNewWindow -FilePath ".\bore.exe" -ArgumentList "local 3389 --to bore.pub" -RedirectStandardOutput "bore.log"
+        Start-Sleep -Seconds 5
+        Get-Content bore.log
+        Write-Host "Bore running in background"
+    
+    - name: Keep alive
+      run: |
+        while ($true) {
+          Start-Sleep -Seconds 60
+          Write-Host "Keeping build alive..." -ForegroundColor Green
+        }
