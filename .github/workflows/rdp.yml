@@ -1,4 +1,4 @@
-name: RDP Cloudflare Tunnel
+name: RDP TCP Tunnel
 
 on:
   workflow_dispatch:
@@ -18,10 +18,13 @@ jobs:
         netsh advfirewall firewall add rule name="RDP" dir=in action=allow protocol=TCP localport=3389
         Start-Service TermService
 
-    - name: Download cloudflared
+    - name: Download bore
       run: |
-        curl -L -o cloudflared.exe https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe
+        curl -L -o bore.zip https://github.com/ekzhang/bore/releases/download/v0.5.0/bore-v0.5.0-x86_64-pc-windows-msvc.zip
+        tar -xf bore.zip
+        del bore.zip
 
-    - name: Run cloudflare tunnel
+    - name: Run bore (keep alive)
       run: |
-        .\cloudflared.exe tunnel --url rdp://localhost:3389 --no-autoupdate
+        .\bore.exe local 3389 --to bore.pub
+        while ($true) { Start-Sleep -Seconds 60 }
